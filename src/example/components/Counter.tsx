@@ -4,13 +4,9 @@ import { useStore } from "../store";
 
 export function Count() {
   const store = useStore();
-  const { count, increment, name, changeName } = store.usePicker([
-    "count",
-    "name",
-    "increment",
-    "changeName",
-  ]);
-// console.debug(dbCount)
+
+  const { count, name, increment, changeName } = store;
+
   console.debug("count rendered");
 
   function changeName2() {
@@ -20,15 +16,15 @@ export function Count() {
   function changeName3() {
     store.patch((state) => (state.name = "shit"));
   }
-  store.useWatcher("count", (oldV, v) => {
-    console.debug("count change", oldV, v);
-  });
+  //   store.useWatcher("count", (oldV, v) => {
+  //     console.debug("count change", oldV, v);
+  //   });
   return (
     <div>
       <h1>I'm the counter</h1>
       <div>number：{count}</div>
       <div>
-        <button onClick={() => increment("payload")}> +1</button>
+        <button onClick={() => increment()}> +1</button>
       </div>
       <h3>{name}</h3>
       <button onClick={() => changeName()}>changeName</button>

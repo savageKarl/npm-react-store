@@ -1,4 +1,4 @@
-import { defineStore } from "../lib/index";
+import { defineStore } from "../lib";
 
 export const useStore = defineStore({
   state: {
@@ -6,19 +6,16 @@ export const useStore = defineStore({
     name: "savage",
   },
   actions: {
-    // 会自动传入 state
-    increment(state, payload) {
-      state.count += 1;
-      // console.debug(state, payload);
+    increment() {
+      this.count += 1;
     },
-    changeName(state) {
-      state.name = "foo";
+    changeName() {
+      this.name = 'foo';
     },
   },
   computed: {
-    dbCount(state) {
-      console.debug('计算属性 dbcount只会执行一次')
-      return state.count * 2;
-    }
-  }
+    dbCount() {
+      return this.count * 2;
+    },
+  },
 });
