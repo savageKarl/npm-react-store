@@ -101,8 +101,8 @@ function setupPatchOfStore(store: StateType) {
   };
 }
 
-/** 给 store 安装 watch 方法 */
-function setupPatchOfWatch(store: StateType) {
+/** 给 store 安装 watch hook */
+function setupStoreOfWatcherHook(store: StateType) {
   store.useWatcher = function useWatcher(v: string, fn: Callback) {
     const callback = useRef<Callback>();
     if (!callback.current) callback.current = fn;
@@ -135,7 +135,7 @@ export function defineStore<
 
   setupActions(s, store);
   setupPatchOfStore(store);
-  setupPatchOfWatch(store);
+  setupStoreOfWatcherHook(store);
   setupComputed(computed, store as any);
 
   function useStore(): Store<S, A, C> {

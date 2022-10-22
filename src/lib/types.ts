@@ -27,7 +27,7 @@ export type Store<S, A, C> = S &
   A &
   StoreWithGetters<C> & {
     patch(v: Partial<S> | ((arg: S) => unknown)): unknown;
-    useWatcher<K extends keyof S>(v: K, fn: (oldV: S[K], V: S[K]) => any): any;
+    useWatcher<K extends keyof S>(k: K, fn: (oldV: S[K], V: S[K]) => any): any;
   };
 
 export type DepStack = Callback[];
