@@ -2,6 +2,8 @@
 
 > 简单、高效的`React`全局状态管理器
 
+## 特点
+
 - **轻量**
 - **优雅**
 - **高性能**
@@ -9,11 +11,20 @@
 - **渐进式**
 - **模块化**
 
+## 功能
+
+- **按需渲染**
+- **计算属性**
+- **监听器**
+- **智能提示**
+
 ## 安装
 
 ```
-npm install @savage181855/react-store
+npm install @savage181855/react-store -S
 ```
+
+**注意**：第三方镜像同步不及时，一定记得使用官方镜像！！！
 
 ## 兼容性
 
@@ -28,22 +39,26 @@ import { defineStore } from "@savage181855/react-store";
 
 export const useStore = defineStore({
   state: {
-    count: 10,
+    count: 0,
     name: "savage",
   },
   actions: {
-    // 会自动传入 state
-    increment(state, payload) {
-      state.count += 1;
+    increment() {
+      this.count += 1;
+      this.name = "hell";
     },
-    changeName(state) {
-      state.name = "foo";
+    changeName() {
+      this.name = "foo";
     },
   },
   computed: {
-    // 会自动传入 state
-    dbCount(state) {
-      return state.count * 2;
+    dbCount(): number {
+      console.debug("dbCount just execute once");
+      return this.count * 2;
+    },
+    three(state): number {
+      console.debug("can access the state");
+      return this.dbCount * 3;
     },
   },
 });
@@ -57,43 +72,36 @@ import { memo } from "react";
 import { useStore } from "../store";
 
 export function Count() {
-  const store = useStore();
-  // 使用 usePicker hook 来导入在 defineStore 里面定义的 state, actions 和 computed
-  const { count, increment, name, changeName, dbCount } = store.usePicker([
-    "count",
-    "name",
-    "increment",
-    "changeName",
-    "dbCount",
-  ]);
+  console.debug("count rendered");
 
-  // 使用 useWatcher hook 来监听 state 的属性
-  store.useWatcher("count", (oldV, v) => {
-    console.debug("count change", oldV, v);
+  const store = useStore();
+
+  const { count, name, increment, changeName } = store;
+
+  store.useWatcher("count", (oldV, value) => {
+    console.debug("watch", oldV, value);
   });
 
   function changeName2() {
-    // patch 传入对象将跟 state 对象进行合并
+    // pass the object
     store.patch({ name: "bar" });
   }
 
   function changeName3() {
-    // patch 传入函数，函数将传入 state 对象
-    store.patch((state) => (state.name = "hell"));
+    // pass the function
+    store.patch((state) => (state.name = "shit"));
   }
-
   return (
     <div>
       <h1>I'm the counter</h1>
       <div>number：{count}</div>
-
-      {/* 直接使用即可，不需要调用*/}
-      <div>计算属性dbCount：{dbCount}</div>
-      
       <div>
-        <button onClick={() => increment("payload")}> +1</button>
+        <button onClick={() => increment()}> +1</button>
       </div>
       <h3>{name}</h3>
+
+      {/* use the computed property */}
+      <div>{store.dbCount}</div>
       <button onClick={() => changeName()}>changeName</button>
       <button onClick={() => changeName2()}>changeName2</button>
       <button onClick={() => changeName3()}>changeName3</button>
@@ -104,3 +112,7 @@ export function Count() {
 export default memo(Count);
 ```
 
+
+## 结语
+
+希望该工具能够提高您的开发效率和开发体验，请点个 start ！！！，谢谢。

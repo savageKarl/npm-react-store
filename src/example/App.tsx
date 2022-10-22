@@ -1,9 +1,5 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
 
 import Counter from "./components/Counter";
-import A from "./components/A";
-import B from "./components/B";
-import C from "./components/C";
 
 import { useStore } from "./store";
 
@@ -11,9 +7,7 @@ function App() {
   console.debug("app render");
   const store = useStore();
   // debugger;
-  store.useWatcher("count", (oldV, value) => {
-    console.debug("watch", oldV, value);
-  });
+
   const { count, dbCount } = store;
 
   return (
@@ -22,8 +16,8 @@ function App() {
         <div>{count}</div>
         <div>{dbCount}</div>
         <button onClick={() => store.count++}>+1</button>
-        {/* <Counter />
-        <A />
+        <Counter />
+        {/* <A />
         <B />
         <C /> */}
       </header>
