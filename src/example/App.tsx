@@ -5,26 +5,34 @@ import A from "./components/A";
 import B from "./components/B";
 import C from "./components/C";
 
-import {defineStore} from '../lib'
+import { useStore } from "./store";
 
-const useStore = defineStore({
-  state: {
-    count: 0
-  },
-})
+// import {defineStore} from '../lib'
 
+// const useStore = defineStore({
+//   state: {
+//     count: 0
+//   },
+//   actions: {
+//     print() {
+//       this.count = 2
+//       console.debug(this)
+//     }
+//   }
+// })
 
 function App() {
   console.debug("app render");
   const store = useStore();
-  // store
+
+  const { count } = store;
   return (
     <div className="App">
       <header className="App-header">
-        {store.count}
-        {/* <button onClick={() => n.current++}>+1</button> */}
-        <button onClick={() => store.count++}>+1</button>
-        {/* <Counter /> */}
+        <div>{count}</div>
+        {/* <div>{store.name}</div> */}
+        {/* <button onClick={() => store.count++}>+1</button> */}
+        <Counter />
         {/* <A />
         <B />
         <C /> */}

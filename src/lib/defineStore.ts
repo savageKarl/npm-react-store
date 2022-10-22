@@ -22,7 +22,6 @@ let Dep: any = null;
 /*
 开发思路：
 
-
 // 如果用vue的依赖收集原理去做响应式，那么就会有一个问题，如果组件卸载了，没法清除依赖，不用清除依赖，除非不行，换回发布订阅模型
 
 看样子，vue是不会清除依赖，那么这个内存永远都存在这个东西
@@ -30,16 +29,11 @@ useStore 执行的时候，所有依赖都收集了
 
 只要把计算属性执行一遍
 
-
 // 添加两个 api， useWatcher和 patch
 然后 把 state，action和处理过的computed，再proxy即可。
-
-
-
-
-
 */
 
+/** 创建响应式对象 */
 function createReactive<T extends object>(target: T): T {
   const deps: Deps = {};
 
@@ -47,7 +41,6 @@ function createReactive<T extends object>(target: T): T {
     get(target, key: string, receiver) {
       const res = Reflect.get(target, key, receiver);
       if (Dep) {
-        console.debug("收集依赖", key, Dep);
         deps[key]?.add(Dep) || (deps[key] = new Set<Callback>().add(Dep));
       }
       // debugger;
@@ -56,13 +49,12 @@ function createReactive<T extends object>(target: T): T {
       return res;
     },
     set(target, key: string, value, receiver) {
+      const oldV = deepClone((target as any)[key]);
       const res = Reflect.set(target, key, value, receiver);
       // debugger;
-      console.debug("渲染组件");
-      console.debug(deps[key], "当前属性依赖");
-      deps[key]?.forEach((item) => {
-        item();
-      });
+      if (hasChanged(oldV, value)) {
+        deps[key]?.forEach((item) => item());
+      }
       return res;
     },
   });
@@ -70,6 +62,7 @@ function createReactive<T extends object>(target: T): T {
   return obj;
 }
 
+/** 转换计算属性，自执行依赖收集 */
 function setupComputed(fns: Record<string, Callback>, s: StateType) {
   if (fns) {
     for (let k in fns) {
@@ -82,6 +75,7 @@ function setupComputed(fns: Record<string, Callback>, s: StateType) {
   }
 }
 
+/** 收集页面使用的数据 */
 function useCollectDep() {
   const [, forceUpdate] = useReducer((c) => c + 1, 0);
   const callback = useRef<Callback>();
@@ -101,49 +95,58 @@ function useCollectDep() {
   });
 }
 
+/** 转换actions，解决  store的 action 出现 this 丢失的问题 */
+function setupActions(plainStore: StateType, proxyStore: StateType) {
+  for (let k in plainStore) {
+    if (typeof plainStore[k] === "function") {
+      plainStore[k] = (plainStore[k] as Function).bind(proxyStore);
+    }
+  }
+}
 
 
+function setupPatchOfStore(store: StateType) {
+  store.patch = function (val: Object | Function) {
+    // debugger;
+    if (typeof val === "object") {
+      for (let k in val) {
+        store[k] = (val as any)[k];
+      }
+    }
+
+    if (typeof val === "function") {
+      val(store);
+    }
+  };
+}
 
 export function defineStore<
   S extends StateType,
   A extends Record<string, Callback>,
   C = {}
 >(options: Options<S, A, C>) {
-  const state = options.state;
   const actions = options.actions;
 
   // 先proxystate，收集计算属性依赖
-  options.state = createReactive(options.state);
+  const state = createReactive(options.state);
 
   const computed = options.computed as any as Record<string, Callback>;
-  setupComputed(computed, options.state);
+  setupComputed(computed, state);
 
   const s = {
     ...state,
     ...computed,
     ...actions,
-  };
+  } as Record<string, StateType | Callback>;
 
   const store = createReactive(s);
-  // 这里要写一个函数
+
+  setupActions(s, store);
+  setupPatchOfStore(store);
 
   function useStore(): Store<S, A, C> {
-    // 如果使用vue的依赖收集法，每个属性收集自己的依赖，然后自己改变，就执行依赖就行，不需要引入事件中心了，实际上，每个属性，都有自己的事件中心
     useCollectDep();
     return store as any;
-    // return store as any;
   }
   return useStore;
 }
-
-
-defineStore({
-  state: {
-    count: 0
-  },
-  actions: {
-    shit() {
-      this.count = 1
-    }
-  }
-})
