@@ -17,7 +17,7 @@ import type {
   StoreWithGetters,
 } from "./types";
 
-let Dep: any = null;
+let Dep: null | Callback = null;
 
 /*
 开发思路：
@@ -62,14 +62,16 @@ function createReactive<T extends object>(target: T): T {
   return obj;
 }
 
-/** 转换计算属性，自执行依赖收集 */
-function setupComputed(fns: Record<string, Callback>, s: StateType) {
+/** 设置计算属性，指定 this 和 传入 state，并且将自己作为 state 的依赖被收集 */
+function setupComputed(fns: Record<string, Callback>, proxyStore: StateType) {
   if (fns) {
     for (let k in fns) {
-      fns[k] = fns[k].bind(fns, s);
-      // 这里的依赖需要再看看具体怎么实现 todo
-      Dep = { name: k, fn: fns[k] };
-      fns[k] = fns[k]();
+      fns[k] = fns[k].bind(proxyStore, proxyStore);
+      Dep = function () {
+        // debugger;
+        (proxyStore as any)[k] = fns[k]();
+      };
+      (proxyStore as any)[k] = fns[k]();
       Dep = null;
     }
   }
@@ -95,7 +97,7 @@ function useCollectDep() {
   });
 }
 
-/** 转换actions，解决  store的 action 出现 this 丢失的问题 */
+/** 转换 actions，解决  store的 action 出现 this 丢失的问题 */
 function setupActions(plainStore: StateType, proxyStore: StateType) {
   for (let k in plainStore) {
     if (typeof plainStore[k] === "function") {
@@ -104,10 +106,9 @@ function setupActions(plainStore: StateType, proxyStore: StateType) {
   }
 }
 
-
+/** 给 store 安装 patch 方法 */
 function setupPatchOfStore(store: StateType) {
-  store.patch = function (val: Object | Function) {
-    // debugger;
+  store.patch = function (val: StateType | Callback) {
     if (typeof val === "object") {
       for (let k in val) {
         store[k] = (val as any)[k];
@@ -127,11 +128,10 @@ export function defineStore<
 >(options: Options<S, A, C>) {
   const actions = options.actions;
 
-  // 先proxystate，收集计算属性依赖
+  // 先 proxystate，收集计算属性依赖
   const state = createReactive(options.state);
 
   const computed = options.computed as any as Record<string, Callback>;
-  setupComputed(computed, state);
 
   const s = {
     ...state,
@@ -143,6 +143,8 @@ export function defineStore<
 
   setupActions(s, store);
   setupPatchOfStore(store);
+
+  setupComputed(computed, store as any);
 
   function useStore(): Store<S, A, C> {
     useCollectDep();

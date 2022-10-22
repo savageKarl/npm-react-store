@@ -25,17 +25,21 @@ function App() {
   console.debug("app render");
   const store = useStore();
 
-  const { count } = store;
+  const {  count, dbCount, three } = store;
+  // ;debugger;
   return (
     <div className="App">
       <header className="App-header">
         <div>{count}</div>
-        {/* <div>{store.name}</div> */}
-        {/* <button onClick={() => store.count++}>+1</button> */}
+        <div>{dbCount}</div>
+        <div>{dbCount}</div>
+        <div>{three}</div>
+        <div>{store.name}</div>
+        <button onClick={() => store.count++}>+1</button>
         <Counter />
-        {/* <A />
+        <A />
         <B />
-        <C /> */}
+        <C />
       </header>
     </div>
   );

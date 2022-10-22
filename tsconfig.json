@@ -16,5 +16,5 @@
     "declaration": true, // 生成定义文件
     "jsx": "react-jsx"
   },
-  "include": ["src/lib/*"]
+  "include": ["src/lib/*", "src/example/*"]
 }

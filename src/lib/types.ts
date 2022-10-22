@@ -2,22 +2,24 @@ export type Callback = (...args: any) => any;
 export type Deps = { [k: string]: Set<Callback> };
 export type StateType = Record<string | number | symbol, unknown>;
 
+export type ReturnType<T> = T extends (...args: any) => infer R
+  ? R extends (...args: any) => any
+    ? ReturnType<R>
+    : R
+  : never;
+
 export type StoreWithGetters<G> = {
-  readonly [k in keyof G]: G[k] extends (...args: any[]) => infer R ? R : never;
+  readonly [K in keyof G]: ReturnType<G[K]>;
 };
 
-export type _GettersTree<S extends StateType> = Record<
+export type GettersTree<S extends StateType> = Record<
   string,
   ((state: S) => any) | (() => any)
 >;
 
-
-
-
-// 这里改变this指向是为了增加类似提示
 export type Options<S extends StateType, A, C> = {
   state: S;
-  computed?: C & ThisType<S & StoreWithGetters<C>> & _GettersTree<S>;
+  computed?: C & ThisType<S & StoreWithGetters<C>> & GettersTree<S>;
   actions?: A & ThisType<S & A & StoreWithGetters<C>>;
 };
 
@@ -74,4 +76,3 @@ const store = u1seStore();
 store.patch((state) => {
   state.count = 3;
 });
-
