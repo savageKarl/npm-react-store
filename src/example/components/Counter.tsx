@@ -16,9 +16,6 @@ export function Count() {
   function changeName3() {
     store.patch((state) => (state.name = "shit"));
   }
-  //   store.useWatcher("count", (oldV, v) => {
-  //     console.debug("count change", oldV, v);
-  //   });
   return (
     <div>
       <h1>I'm the counter</h1>

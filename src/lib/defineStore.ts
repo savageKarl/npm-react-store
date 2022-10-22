@@ -1,47 +1,33 @@
 import { useEffect, useReducer, useRef } from "react";
 
-import {
-  installEventCenter,
-  hasChanged,
-  get,
-  deepClone,
-  isObject,
-} from "@savage181855/utils";
+import { hasChanged, deepClone, isObject } from "@savage181855/utils";
 
 import type {
-  Deps,
+  DepsType,
   StateType,
   Options,
   Callback,
   Store,
-  StoreWithGetters,
+  DepStack,
 } from "./types";
 
-let Dep: null | Callback = null;
+// 全局依赖收集
+let Dep: DepStack = [];
 
-/*
-开发思路：
-
-// 如果用vue的依赖收集原理去做响应式，那么就会有一个问题，如果组件卸载了，没法清除依赖，不用清除依赖，除非不行，换回发布订阅模型
-
-看样子，vue是不会清除依赖，那么这个内存永远都存在这个东西
-useStore 执行的时候，所有依赖都收集了
-
-只要把计算属性执行一遍
-
-// 添加两个 api， useWatcher和 patch
-然后 把 state，action和处理过的computed，再proxy即可。
-*/
+// 如果可以记录 从编译到渲染之前用了哪些state，就能知道依赖，需要记录这一段的get，set值，需要进行计算，很复杂，后面迭代
+// let RemoveDep: null | { key: string; fn: Callback } = null;
+// 然后在组件要被卸载的时候，访问一下store key的数据，get拦截然后移除依赖
 
 /** 创建响应式对象 */
 function createReactive<T extends object>(target: T): T {
-  const deps: Deps = {};
+  const deps: DepsType = {};
 
   const obj = new Proxy(target, {
     get(target, key: string, receiver) {
       const res = Reflect.get(target, key, receiver);
-      if (Dep) {
-        deps[key]?.add(Dep) || (deps[key] = new Set<Callback>().add(Dep));
+      if (Dep.length > 0) {
+        if (!deps[key]) deps[key] = new Set<Callback>();
+        Dep.forEach((item) => deps[key]?.add(item));
       }
       // debugger;
       if (isObject(res)) return createReactive(res);
@@ -53,7 +39,7 @@ function createReactive<T extends object>(target: T): T {
       const res = Reflect.set(target, key, value, receiver);
       // debugger;
       if (hasChanged(oldV, value)) {
-        deps[key]?.forEach((item) => item());
+        deps[key]?.forEach((item) => item(oldV, value));
       }
       return res;
     },
@@ -67,12 +53,9 @@ function setupComputed(fns: Record<string, Callback>, proxyStore: StateType) {
   if (fns) {
     for (let k in fns) {
       fns[k] = fns[k].bind(proxyStore, proxyStore);
-      Dep = function () {
-        // debugger;
-        (proxyStore as any)[k] = fns[k]();
-      };
+      Dep.push(() => ((proxyStore as any)[k] = fns[k]()));
       (proxyStore as any)[k] = fns[k]();
-      Dep = null;
+      Dep.pop();
     }
   }
 }
@@ -86,14 +69,11 @@ function useCollectDep() {
     callback.current = function () {
       forceUpdate();
     };
-    Dep = callback.current;
+    Dep.push(callback.current);
   }
 
   useEffect(() => {
-    Dep = null;
-    if (!callback.current) {
-      console.debug("收集完毕");
-    }
+    Dep.pop();
   });
 }
 
@@ -121,6 +101,18 @@ function setupPatchOfStore(store: StateType) {
   };
 }
 
+/** 给 store 安装 watch 方法 */
+function setupPatchOfWatch(store: StateType) {
+  store.useWatcher = function useWatcher(v: string, fn: Callback) {
+    const callback = useRef<Callback>();
+    if (!callback.current) callback.current = fn;
+    Dep.push(callback.current);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let temp = store[v];
+    Dep.pop();
+  };
+}
+
 export function defineStore<
   S extends StateType,
   A extends Record<string, Callback>,
@@ -143,7 +135,7 @@ export function defineStore<
 
   setupActions(s, store);
   setupPatchOfStore(store);
-
+  setupPatchOfWatch(store);
   setupComputed(computed, store as any);
 
   function useStore(): Store<S, A, C> {

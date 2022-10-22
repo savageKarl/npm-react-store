@@ -8,7 +8,7 @@ export const useStore = defineStore({
   actions: {
     increment() {
       this.count += 1;
-      this.name = 'fuckyou'
+      this.name = 'hell'
     },
     changeName() {
       this.name = "foo";
@@ -16,12 +16,12 @@ export const useStore = defineStore({
   },
   computed: {
     dbCount(): number {
-      console.debug("只会执行一次");
+      console.debug("dbCount just execute once");
       return this.count * 2;
     },
     three(state): number {
+      console.debug('can access the state')
       return this.dbCount * 3;
-      // return 2;
     },
   },
 });
