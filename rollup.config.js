@@ -10,7 +10,7 @@ module.exports = {
   output: [
     {
       file: "dist/index.js", // 输出的文件
-      format: "cjs", // 文件模块规范
+       format: "cjs", // 文件模块规范
     },
   ],
   plugins: [
@@ -19,7 +19,7 @@ module.exports = {
     resolve(), // rollup导入语法只能导入本地文件，这里用于转换语法，告诉导入的是第三方库
     terser(), // 压缩代码和去除注释
     ts({ // 解析 typescript
-      tsconfig: path.resolve(__dirname, "tsconfig.json"),
+      tsconfig: path.resolve(__dirname, "tsconfig.rollup.json"),
       extensions: [".js", ".ts", ".tsx"], // 解析的扩展名
     }),
   ],
