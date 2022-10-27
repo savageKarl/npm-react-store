@@ -14,10 +14,6 @@ import type {
 // 全局依赖收集
 let Dep: DepStack = [];
 
-// 如果可以记录 从编译到渲染之前用了哪些state，就能知道依赖，需要记录这一段的get，set值，需要进行计算，很复杂，后面迭代
-// let RemoveDep: null | { key: string; fn: Callback } = null;
-// 然后在组件要被卸载的时候，访问一下store key的数据，get拦截然后移除依赖
-
 /** 创建响应式对象 */
 function createReactive<T extends object>(target: T): T {
   const deps: DepsType = {};

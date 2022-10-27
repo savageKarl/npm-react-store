@@ -4,25 +4,22 @@ import commonjs from "rollup-plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 
 const config = {
-  input: "src/lib/index.ts", // 打包入口
+  input: "src/lib/index.ts", // pack entry
   output: [
     {
-      file: "dist/index.js", // 输出的文件
-      format: "cjs", // 文件模块规范
+      file: "dist/index.js", // ouput file
+      format: "cjs", // file module specifications
     },
   ],
   plugins: [
-    commonjs(), // 解析 commonjs规范的模块
-    // 打包插件
-    resolve(), // rollup导入语法只能导入本地文件，这里用于转换语法，告诉导入的是第三方库
-    terser(), // 压缩代码和去除注释
+    commonjs(), // parse the module of commonjs specifications
+    resolve(), // parse third-party lib, because rollup only can parse local module
+    terser(), // minify code and remove comments
     ts({
-      // 解析 typescript
-      tsconfig: "tsconfig.rollup.json",
-      extensions: [".js", ".ts", ".tsx"], // 解析的扩展名
+      tsconfig: "tsconfig.rollup.json", // specify tsconfig.json file, use to specify the packaging file range
     }),
   ],
-  external: ["react", "react-dom"], // 声明使用的第三方外部模块，要不然打包就会报错
+  external: ["react", "react-dom"], // declare the third-party external module used, or the packaging will report an error
 };
 
 export default config;
