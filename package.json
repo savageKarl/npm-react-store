@@ -7,6 +7,7 @@
     "/dist",
     "readme.md"
   ],
+  "type": "module",
   "keywords": [
     "react-store",
     "store",
@@ -46,7 +47,6 @@
     "eject": "react-scripts eject",
     "build": "rollup -c rollup.config.js"
   },
-  "type": "commonjs",
   "author": {
     "name": "savage",
     "email": "2443005004@qq.com",
@@ -61,7 +61,7 @@
     "url": "https://github.com/savage181855/react-store",
     "email": "2443005004@qq.com"
   },
-  "license": "GNU GPLv3",
+  "license": "GPLv3",
   "eslintConfig": {
     "extends": [
       "react-app",
