@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "target": "es6",
     "allowJs": false,
     "skipLibCheck": true,
@@ -16,5 +17,5 @@
     "declaration": true, // 生成定义文件
     "jsx": "react-jsx"
   },
-  "include": ["src/lib/*", "src/example/*"],
+  "include": ["src"],
 }

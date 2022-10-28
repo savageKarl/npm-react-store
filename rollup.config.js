@@ -1,4 +1,3 @@
-import { terser } from "rollup-plugin-terser";
 import ts from "rollup-plugin-typescript2";
 import commonjs from "rollup-plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
@@ -10,11 +9,14 @@ const config = {
       file: "dist/index.js", // ouput file
       format: "cjs", // file module specifications
     },
+    {
+      file: "dist/index.mjs", // ouput file
+      format: "esm", // file module specifications
+    },
   ],
   plugins: [
     commonjs(), // parse the module of commonjs specifications
     resolve(), // parse third-party lib, because rollup only can parse local module
-    terser(), // minify code and remove comments
     ts({
       tsconfig: "tsconfig.rollup.json", // specify tsconfig.json file, use to specify the packaging file range
     }),
