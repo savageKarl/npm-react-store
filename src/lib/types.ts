@@ -1,5 +1,5 @@
 export type Callback = (...args: any) => any;
-export type DepsType = { [k: string]: Set<Callback> };
+export type DepsType = Map<any, Set<Callback>>;
 export type StateType = Record<string | number | symbol, unknown>;
 
 export type ReturnType<T> = T extends (...args: any) => infer R

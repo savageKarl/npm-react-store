@@ -11,19 +11,22 @@ import type {
   DepStack,
 } from "./types";
 
-// 全局依赖收集
+// global dependency collection
 let Dep: DepStack = [];
 
-/** 创建响应式对象 */
+/** create reactive object */
 function createReactive<T extends object>(target: T): T {
-  const deps: DepsType = {};
+  const deps: DepsType = new Map();
 
   const obj = new Proxy(target, {
     get(target, key: string, receiver) {
       const res = Reflect.get(target, key, receiver);
       if (Dep.length > 0) {
-        if (!deps[key]) deps[key] = new Set<Callback>();
-        Dep.forEach((item) => deps[key]?.add(item));
+        if (!deps.get(key)) deps.set(key, new Set<Callback>());
+
+        Dep.forEach((item) => {
+          deps.get(key)?.add(item);
+        });
       }
       // debugger;
       if (isObject(res)) return createReactive(res);
@@ -35,7 +38,7 @@ function createReactive<T extends object>(target: T): T {
       const res = Reflect.set(target, key, value, receiver);
       // debugger;
       if (hasChanged(oldV, value)) {
-        deps[key]?.forEach((item) => item(oldV, value));
+        deps.get(key)?.forEach((item) => item(oldV, value));
       }
       return res;
     },
@@ -44,7 +47,7 @@ function createReactive<T extends object>(target: T): T {
   return obj;
 }
 
-/** 设置计算属性，指定 this 和 传入 state，并且将自己作为 state 的依赖被收集 */
+/** set the calculation property, specify this and the incoming state, and collect yourself as the dependency of the state */
 function setupComputed(fns: Record<string, Callback>, proxyStore: StateType) {
   if (fns) {
     for (let k in fns) {
@@ -56,7 +59,7 @@ function setupComputed(fns: Record<string, Callback>, proxyStore: StateType) {
   }
 }
 
-/** 收集页面使用的数据 */
+/** collect dependency used by page*/
 function useCollectDep() {
   const [, forceUpdate] = useReducer((c) => c + 1, 0);
   const callback = useRef<Callback>();
@@ -73,7 +76,7 @@ function useCollectDep() {
   });
 }
 
-/** 转换 actions，解决  store的 action 出现 this 丢失的问题 */
+/** convert actions to solve the problem of this loss in store actions */
 function setupActions(plainStore: StateType, proxyStore: StateType) {
   for (let k in plainStore) {
     if (typeof plainStore[k] === "function") {
@@ -82,7 +85,7 @@ function setupActions(plainStore: StateType, proxyStore: StateType) {
   }
 }
 
-/** 给 store 安装 patch 方法 */
+/** install the patch method to the store */
 function setupPatchOfStore(store: StateType) {
   store.patch = function (val: StateType | Callback) {
     if (typeof val === "object") {
@@ -97,7 +100,7 @@ function setupPatchOfStore(store: StateType) {
   };
 }
 
-/** 给 store 安装 watch hook */
+/** install the watch hook to the store */
 function setupStoreOfWatcherHook(store: StateType) {
   store.useWatcher = function useWatcher(v: string, fn: Callback) {
     const callback = useRef<Callback>();
@@ -116,7 +119,7 @@ export function defineStore<
 >(options: Options<S, A, C>) {
   const actions = options.actions;
 
-  // 先 proxystate，收集计算属性依赖
+  // proxy state to collect calculation property dependency
   const state = createReactive(options.state);
 
   const computed = options.computed as any as Record<string, Callback>;
