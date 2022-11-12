@@ -4,6 +4,12 @@ export const useStore = defineStore({
   state: {
     count: 0,
     name: "savage",
+    user: {
+      age:0,
+      firstname: 'greet',
+      lastname: 'bar',
+    },
+
   },
   actions: {
     increment() {
@@ -23,5 +29,8 @@ export const useStore = defineStore({
       console.debug('can access the state')
       return this.dbCount * 3;
     },
+    fullname(state) {
+      return state.user.firstname + state.user.lastname;
+    }
   },
 });

@@ -28,8 +28,6 @@ function createReactive<T extends object>(target: T): T {
           deps.get(key)?.add(item);
         });
       }
-      // debugger;
-      if (isObject(res)) return createReactive(res);
 
       return res;
     },
@@ -44,6 +42,12 @@ function createReactive<T extends object>(target: T): T {
     },
   });
 
+  for (let k in obj) {
+    const child = obj[k];
+    if (isObject(child)) {
+      obj[k] = createReactive(obj[k] as any) as any;
+    }
+  }
   return obj;
 }
 
